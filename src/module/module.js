@@ -7,7 +7,9 @@ export default class Module {
     // Store some children item
     this._children = Object.create(null)
     // Store the origin module object which passed by programmer
+    //当前module
     this._rawModule = rawModule
+    //当前module的state
     const rawState = rawModule.state
 
     // Store the origin module's state
@@ -42,7 +44,7 @@ export default class Module {
       this._rawModule.getters = rawModule.getters
     }
   }
-
+  //执行installModule时会用到的一些实例方法
   forEachChild (fn) {
     forEachValue(this._children, fn)
   }

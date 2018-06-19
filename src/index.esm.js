@@ -1,3 +1,5 @@
+//ESM （ES module）构建入口
+
 import { Store, install } from './store'
 import { mapState, mapMutations, mapGetters, mapActions, createNamespacedHelpers } from './helpers'
 

@@ -4,6 +4,7 @@ import { assert, forEachValue } from '../util'
 export default class ModuleCollection {
   constructor (rawRootModule) {
     // register root module (Vuex.Store options)
+    //注册根module
     this.register([], rawRootModule, false)
   }
 
@@ -27,9 +28,14 @@ export default class ModuleCollection {
 
   register (path, rawModule, runtime = true) {
     if (process.env.NODE_ENV !== 'production') {
+      /**
+       * 对module进行断言，判断module是否符合要求
+       * module的getters/actions/mutations等字段是可遍历的对象
+       * 且key的值类型是函数
+       */
       assertRawModule(path, rawModule)
     }
-
+    //创建module对象
     const newModule = new Module(rawModule, runtime)
     if (path.length === 0) {
       this.root = newModule
@@ -39,6 +45,7 @@ export default class ModuleCollection {
     }
 
     // register nested modules
+    //递归创建子module对象
     if (rawModule.modules) {
       forEachValue(rawModule.modules, (rawChildModule, key) => {
         this.register(path.concat(key), rawChildModule, runtime)

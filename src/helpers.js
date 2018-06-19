@@ -4,6 +4,10 @@
  * @param {Object|Array} states # Object's item can be a function which accept state and getters for param, you can do something for state and getters in it.
  * @param {Object}
  */
+/**
+ * mapXXX命名的辅助函数的实现
+ */
+
 export const mapState = normalizeNamespace((namespace, states) => {
   const res = {}
   normalizeMap(states).forEach(({ key, val }) => {
@@ -61,19 +65,26 @@ export const mapMutations = normalizeNamespace((namespace, mutations) => {
  * @param {Object|Array} getters
  * @return {Object}
  */
+//该函数会将store中的getter映射到局部计算属性中
 export const mapGetters = normalizeNamespace((namespace, getters) => {
+  //返回结果
   const res = {}
+  //遍历规范化参数后的对象
+  //getters就是传递给mapGetters的map对象或者数组
   normalizeMap(getters).forEach(({ key, val }) => {
     // thie namespace has been mutate by normalizeNamespace
     val = namespace + val
     res[key] = function mappedGetter () {
+      //一般不会传入namespace对象
       if (namespace && !getModuleByNamespace(this.$store, 'mapGetters', namespace)) {
         return
       }
+      //如果getter不存在则报错
       if (process.env.NODE_ENV !== 'production' && !(val in this.$store.getters)) {
         console.error(`[vuex] unknown getter: ${val}`)
         return
       }
+      //返回getter值，store.getters可见resetStoreVM的分析
       return this.$store.getters[val]
     }
     // mark vuex getter for devtools
@@ -88,19 +99,27 @@ export const mapGetters = normalizeNamespace((namespace, getters) => {
  * @param {Object|Array} actions # Object's item can be a function which accept `dispatch` function as the first param, it can accept anthor params. You can dispatch action and do any other things in this function. specially, You need to pass anthor params from the mapped function.
  * @return {Object}
  */
+//该方法会将store中的dispatch方法映射到组件的methods中
 export const mapActions = normalizeNamespace((namespace, actions) => {
+  //返回结果
   const res = {}
+  //遍历规范化参数后的对象
+  //actions就是传递给mapActions的map对象或者数组
   normalizeMap(actions).forEach(({ key, val }) => {
     res[key] = function mappedAction (...args) {
       // get dispatch function from store
+      //保存store dispatch引用
       let dispatch = this.$store.dispatch
       if (namespace) {
+        //根据namespace获取module
         const module = getModuleByNamespace(this.$store, 'mapActions', namespace)
         if (!module) {
           return
         }
+        //绑定module上下文的dispatch
         dispatch = module.context.dispatch
       }
+      //调用action函数
       return typeof val === 'function'
         ? val.apply(this, [dispatch].concat(args))
         : dispatch.apply(this.$store, [val].concat(args))
@@ -128,6 +147,17 @@ export const createNamespacedHelpers = (namespace) => ({
  * @param {Array|Object} map
  * @return {Object}
  */
+//normalizeMap函数的作用是将传递给mapXXX的参数统一转化为对象返回
+/**
+ * 例如 normalize actions
+ * normalizeMap(['test','test1']) ==> {test:'test', val:'test'}
+ * 例如 normalize getters
+ * normalizeMap({
+ *  'test':'getTestValue',
+ *  'test2':'getTestValue2'
+ * }) ===> {test:'test', val:'getTestValue'}
+ * 
+ */
 function normalizeMap (map) {
   return Array.isArray(map)
     ? map.map(key => ({ key, val: key }))
@@ -139,9 +169,13 @@ function normalizeMap (map) {
  * @param {Function} fn
  * @return {Function}
  */
+//normalizeNamespace函数的主要功能返回一个新的函数，在新的函数中规范化namespace参数
+//并调用函数参数fn
 function normalizeNamespace (fn) {
   return (namespace, map) => {
     if (typeof namespace !== 'string') {
+      //如果传给mapXXX的第一个参数不是一个字符串
+      //则将namespace赋值给map参数并将namespace设置为空
       map = namespace
       namespace = ''
     } else if (namespace.charAt(namespace.length - 1) !== '/') {
